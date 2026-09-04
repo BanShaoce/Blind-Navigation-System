@@ -1,0 +1,6 @@
+1.一键启动脚本：ros2 launch /home/nvidia/nav/blind_guide.launch.py
+2.查看后台日志：
+tail -f /home/nvidia/nav/logs/tf.log
+tail -f /home/nvidia/nav/logs/rtabmap.log
+tail -f /home/nvidia/nav/logs/nav2.log
+3.rviz查看导航：rviz2
