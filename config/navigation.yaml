@@ -1,0 +1,12 @@
+blind_guide_node:
+  ros__parameters:
+    destinations.seat.x: -2.944
+    destinations.seat.y: -3.470
+    destinations.entrance.x: 5.226
+    destinations.entrance.y: 6.950
+    guidance.angle_threshold_deg: 10.0
+    guidance.direction_threshold_deg: 10.0
+    guidance.waypoint_reach_threshold: 0.4
+    guidance.off_track_limit: 0.4
+    guidance.off_track_check_interval: 1.5
+    guidance.path_sample_distance: 0.5

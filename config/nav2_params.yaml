@@ -210,8 +210,8 @@ local_costmap:
         z_resolution: 0.1            # 网格高度精度(10cm)
         z_voxels: 50                 
         mark_threshold: 0            # 有1个点云就认为是障碍
-        max_queue_size: 10           # 0719新加
-        expected_update_rate: 10.0   # 0719新加
+        max_queue_size: 10
+        expected_update_rate: 10.0
         observation_sources: pointcloud
         pointcloud:
           topic: /zed/zed_node/point_cloud/cloud_registered
@@ -244,7 +244,7 @@ global_costmap:
       #obstacle_layer:
       #  plugin: "nav2_costmap_2d::ObstacleLayer"
       #  enabled: True
-      #  observation_sources: pointcloud  #0507
+      #  observation_sources: pointcloud
       #  pointcloud:
       #    topic: /zed/zed_node/point_cloud/cloud_registered
       #    max_obstacle_height: 2.5
