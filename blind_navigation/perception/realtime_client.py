@@ -1,14 +1,15 @@
-# omni_realtime_client.py
-# -- coding: utf-8 --
-import asyncio
-import websockets
-import json
-import base64
-import time
-from typing import Optional, Callable, Dict, Any
-from enum import Enum
+"""Omni Realtime WebSocket 客户端。"""
 
-DEBUG = True
+from __future__ import annotations
+
+import asyncio
+import base64
+import json
+import time
+from enum import Enum
+from typing import Any, Callable
+
+import websockets
 
 class TurnDetectionMode(Enum):
     SERVER_VAD = "server_vad"
@@ -25,12 +26,15 @@ class OmniRealtimeClient:
         model: str = "",
         voice: str = "Ethan",
         turn_detection_mode: TurnDetectionMode = TurnDetectionMode.MANUAL,
-        on_text_delta: Optional[Callable[[str], None]] = None,
-        on_audio_delta: Optional[Callable[[bytes], None]] = None,
-        on_interrupt: Optional[Callable[[], None]] = None,
-        extra_event_handlers: Optional[Dict[str, Callable[[Dict[str, Any]], None]]] = None,
-        instructions: Optional[str] = None, 
-        on_text_done: Optional[Callable[[str], None]] = None                      # == NEW: 接收系统提示词
+        on_text_delta: Callable[[str], None] | None = None,
+        on_audio_delta: Callable[[bytes], None] | None = None,
+        on_interrupt: Callable[[], None] | None = None,
+        extra_event_handlers: dict[
+            str, Callable[[dict[str, Any]], None]
+        ] | None = None,
+        instructions: str | None = None,
+        on_text_done: Callable[[str], None] | None = None,
+        debug: bool = False,
     ):
         self.base_url = base_url
         self.api_key = api_key
@@ -45,19 +49,21 @@ class OmniRealtimeClient:
         self._is_responding = False
         self.instructions = instructions                            # == NEW: 存储提示词
         self.on_text_done = on_text_done
-        #self._vad_enabled = True          # 当前是否启用 VAD
-        #self._pending_vad_restore = False # 是否需要在回复完成后恢复 VAD
-        #self._session_updated_event = asyncio.Event()
+        self.debug = debug
         self._event_counter = 0
         self._input_audio_cleared_event = asyncio.Event()
+
+    @property
+    def is_responding(self) -> bool:
+        return self._is_responding
 
     async def connect(self) -> None:
         url = f"{self.base_url}?model={self.model}"
         headers = {"Authorization": f"Bearer {self.api_key}"}
-        print(f"[WS] Connecting to {url}")
+        print(f"[WS] 正在连接 {url}")
         self.ws = await websockets.connect(url, extra_headers=headers)
 
-        cfg: Dict[str, Any] = {
+        cfg: dict[str, Any] = {
             "modalities": ["text", "audio"],
             "voice": self.voice,
             "input_audio_format": "pcm16",
@@ -70,14 +76,10 @@ class OmniRealtimeClient:
                 "silence_duration_ms": 900
             }
         }
-        # == MODIFIED: 如果提供了系统提示词，就注入到 session.update 配置里
         if self.instructions:
             cfg["instructions"] = self.instructions
 
-        print(f"[WS] Sending session.update: {cfg}")
         await self.send_event({"type": "session.update", "session": cfg})
-        #self._vad_config = cfg.get("turn_detection")  # 可能为 dict 或 None
-        #self._vad_enabled = (self._vad_config is not None)
 
     async def trigger_response_with_image_and_text(self, image_bytes: bytes, text: str):
         print(f"[WS] Triggering AI response with image and text: {text[:50]}...")
@@ -100,13 +102,15 @@ class OmniRealtimeClient:
         })
 
         await self.send_event({"type": "response.create"})
-    
-    async def send_event(self, event: Dict[str, Any]) -> None:
+
+    async def send_event(self, event: dict[str, Any]) -> None:
         self._event_counter += 1
         eid = f"event_{int(time.time() * 1000)}_{self._event_counter}"
         event["event_id"] = eid
-        if DEBUG:
+        if self.debug:
             print(f"[WS ▶] {event['type']} (id={eid})")
+        if self.ws is None:
+            raise RuntimeError("WebSocket 尚未连接")
         await self.ws.send(json.dumps(event))
 
     async def commit_audio_buffer(self) -> None:
@@ -123,7 +127,7 @@ class OmniRealtimeClient:
                 t = ev.get("type", "<no-type>")
 
                 # 只保留错误和重要状态，其余调试信息由 DEBUG 控制
-                if DEBUG:
+                if self.debug:
                     print(f"[WS ◀] Event: {t}, keys: {list(ev.keys())}")
                     if t.startswith("response."):
                         print(f"    -> full event: {json.dumps(ev, ensure_ascii=False)[:500]}")
@@ -168,8 +172,8 @@ class OmniRealtimeClient:
                 if t in self.extra_event_handlers:
                     self.extra_event_handlers[t](ev)
 
-        except Exception as e:
-            print("[WS] Connection error:", e)
+        except websockets.ConnectionClosed as exc:
+            print("[WS] 连接已关闭:", exc)
 
     async def trigger_response_with_text(self, text: str):
         print(f"[WS] Triggering AI response with text: {text[:50]}...")
