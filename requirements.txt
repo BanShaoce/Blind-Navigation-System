@@ -1,0 +1,5 @@
+numpy>=1.21,<3
+PyAudio>=0.2.13,<1
+webrtcvad-wheels>=2.0.14,<3
+websockets>=11,<14
+Jetson.GPIO>=2.1; platform_machine == "aarch64"

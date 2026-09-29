@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>blind_navigation_system</name>
+  <version>0.2.0</version>
+  <description>面向盲人用户的 ROS 2 室内导航、触觉引导和多模态感知系统</description>
+  <maintainer email="maintainers@example.com">Blind Navigation System Contributors</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/GuoGuo614/Blind-Navigation-System</url>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_msgs</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rosbridge_server</exec_depend>
+  <exec_depend>rtabmap_launch</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
